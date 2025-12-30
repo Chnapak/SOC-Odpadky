@@ -1,0 +1,5 @@
+0 Kovy
+1 Papir
+2 Sklo
+3 Smesi
+4 Plast
