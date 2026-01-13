@@ -1,0 +1,9 @@
+# Python virtual environment
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+
+# TensorFlow / Python cache
+__pycache__/
+*.pyc
