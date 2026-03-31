@@ -1,5 +1,5 @@
 import tensorflow as tf
-from keras.models import load_model  # TensorFlow is required for Keras to work
+from tensorflow.keras.models import load_model
 from PIL import Image, ImageOps  # Install pillow instead of PIL
 import numpy as np
 import cv2 as cv
@@ -10,6 +10,7 @@ import requests
 ESP_IP = "192.168.4.1" # Neměnit
 PING_URL = f"http://{ESP_IP}/ping" # Testování spojení s Arduinem
 DATA_URL = f"http://{ESP_IP}/data" # Posílání kolik má Arduino udělat kroků s motorem.
+NUMBER_OF_TYPES_TRASH = 5
  
 def main():
     # Config
@@ -38,11 +39,8 @@ def main():
         # frame = snímek
         ret, frame = cam.read()
 
-        if ret: 
-            cv.imshow("Captured", frame) # Ukázat okno s fotkou    
+        if ret:
             cv.imwrite("captured_image.png", frame) # Uložit fotku
-            cv.waitKey(2000) # Počkat
-            cv.destroyWindow("Captured") # Vypnout okno s fotkou     
         else:
             print("Failed to capture image.") # ret = false, nemám fotku.
             break
@@ -83,16 +81,16 @@ def main():
         else:
             match type_of_waste:
                 case "Plast":
-                    angle = 0
+                    angle = 0 * (360/NUMBER_OF_TYPES_TRASH)
                 case "Sklo":
-                    angle = 60
+                    angle = 1 * (360/NUMBER_OF_TYPES_TRASH)
                 case "Papir":
-                    angle = 120
+                    angle = 2 * (360/NUMBER_OF_TYPES_TRASH)
                 case "Kovy":
-                    angle = 180
-                case "Smesi":
-                    angle = -120
-        
+                    angle = 3 * (360/NUMBER_OF_TYPES_TRASH)
+                case "Smesi": 
+                    angle = 4 * (360/NUMBER_OF_TYPES_TRASH)
+
         if angle == None:
             print("nebyla prirazena validni skupina")
             break
@@ -103,11 +101,10 @@ def main():
             payload = {"angle": angle} # Zpráva k odeslání
             r = requests.post(DATA_URL, json=payload, timeout=2) # Poslání zprávy
             r.raise_for_status() # Hodí vyjímku, když není OK. :(
+            time.sleep(1)
             print("POST /data OK:", r.text)
+            time.sleep(2.0)
             
-            # Kroky nesmí jít rovnou za sebou. Arduino je přechytralý a vykonává kroky, co nejrychleji.
-            # Např. pokud by přišel předchozí příkaz na 8888 kroků a hned potom -1000, tak udělá jenom 7888 kroků nikoliv 9888.
-            # Proto se hodí sleep
 
         except requests.exceptions.RequestException as e:
             # Popíše chybu, když program selže.
